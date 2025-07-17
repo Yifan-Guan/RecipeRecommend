@@ -1,0 +1,113 @@
+<template>
+    <div class="chat-window">
+        <h2 class="window-title">Chat Test</h2>
+        <div class="message-view">
+            <div
+            class="message-content"
+            :class="message.role == 'agent' ? 'agent-message' : 'user-message'"
+            v-for="message in messagesList"
+            :key="nanoid()"
+            >
+            {{ message.role }}
+            <p>{{ message.content }}</p>
+            </div>
+        </div>
+        <div class="message-send">
+            <input 
+            class="message-send-input" 
+            type="text" 
+            placeholder="Type your message here..." 
+            v-model="currentUserMessage"
+            />
+            <button 
+            class = "message-send-button"
+            @click="sendUserMessage"
+            >Send</button>
+        </div>
+    </div>
+
+</template>
+
+<script lang="ts"> export default {name:"ChatWindow"}</script>
+<script setup lang="ts">
+import {ref, reactive} from 'vue'
+import {nanoid} from 'nanoid'
+import {type ChatMessage} from '@/types'
+import {sendMessageToOpenAI} from '@/hooks/chat-with-openai'
+
+let currentUserMessage = ref("")
+let messagesList: Array<ChatMessage> = reactive([
+    {
+        role: "agent",
+        content: "Hello! How can I assist you today?"
+    }
+]) 
+
+async function sendUserMessage() {
+    if (currentUserMessage.value) {
+        messagesList.push({
+            role: "user",
+            content: currentUserMessage.value
+        });
+        currentUserMessage.value = "";
+        let agentResponse = await sendMessageToOpenAI(currentUserMessage.value);
+        let angentMessage = "请求失败，请稍后再试";
+        if (agentResponse) {
+            angentMessage = agentResponse.data.output.content 
+        }
+        messagesList.push({
+            role: "agent",
+            content:angentMessage 
+        });
+    }
+}
+
+</script>
+
+<style scope>
+.chat-window {
+    border-style: solid;
+    border-radius: 10px;
+    margin: 30px;
+}
+.window-title {
+    font-size: 25px;
+    text-align: center;
+}
+.message-view {
+    border-style: solid;
+    border-radius: 10px;
+    min-height: 300px;
+    margin: 10px;
+}
+.message-content {
+    border-style: dashed;
+}
+.message-send {
+    border-style: solid;
+    border-radius: 10px;
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    position: relative;
+    bottom: 0;
+    margin: 10px;
+}
+.message-send-input {
+    font-size: 30px;
+    white-space: pre-wrap;
+    width: 90%;
+    border-style: none;
+    outline: none;
+}
+.message-send-button {
+    font-size: 30px;
+    width: 10%;
+    background-color: #4CAF50; /* Green */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+</style>
