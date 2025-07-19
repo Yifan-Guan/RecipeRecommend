@@ -1,13 +1,51 @@
 import axios from 'axios'
 
+// async function sendMessageToOpenAI(message: string){
+//     console.log("send message", message)
+//     let response = await axios.post('http://localhost:8000/openai/invoke',
+//         {
+//             input:message,
+//             config:{},
+//             kwargs:{},
+//         }
+//     )
+//     console.log(typeof response.data)
+//     console.log(response.data)
+//     return response
+// }
 async function sendMessageToOpenAI(message: string){
-    let response = await axios.post('http://localhost:8000/openai/invoke',
-        {
+    console.log("send message", message)
+    let response = await fetch('http://localhost:8000/openai/stream',{
+        method: 'post',
+        body: JSON.stringify({ 
             input:message,
             config:{},
             kwargs:{},
+        })
         }
     )
     return response
 }
-export { sendMessageToOpenAI }
+
+async function getContentFromOpenAIResponse(response: any, messageList: any) {
+    messageList[messageList.length - 1].content = ""
+    const reader = response.body?.getReader()
+    const decoder = new TextDecoder('utf-8')
+    while (true) {
+        const {done, value} = await reader?.read() || {done: true, value: ""}
+        if (done) break
+        const chunk = decoder.decode(value, {stream: true})
+        let chunkStrArray = chunk.split("\n")
+        for (let chunkStr of chunkStrArray) {
+            if (chunkStr.trim().startsWith("data:")) {
+                let jsonChunk = JSON.parse(chunkStr.replace("data:", "").trim())
+                if (jsonChunk && jsonChunk.content) {
+                   messageList[messageList.length - 1].content += jsonChunk.content
+                }
+            }
+        }
+    }    
+}
+
+
+export { sendMessageToOpenAI, getContentFromOpenAIResponse }

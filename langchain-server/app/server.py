@@ -4,6 +4,7 @@ from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from langserve import add_routes
 from langchain_openai import ChatOpenAI 
+from .testStream import chain
 
 load_dotenv()
 
@@ -27,9 +28,15 @@ add_routes(
     path="/openai"
 )
 
+add_routes(
+    app,
+    chain,
+    path="/chain"
+)
+
 # Edit this to add the chain you want to add
 
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
