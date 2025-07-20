@@ -1,18 +1,4 @@
-import axios from 'axios'
 
-// async function sendMessageToOpenAI(message: string){
-//     console.log("send message", message)
-//     let response = await axios.post('http://localhost:8000/openai/invoke',
-//         {
-//             input:message,
-//             config:{},
-//             kwargs:{},
-//         }
-//     )
-//     console.log(typeof response.data)
-//     console.log(response.data)
-//     return response
-// }
 async function sendMessageToOpenAI(message: string){
     console.log("send message", message)
     let response = await fetch('http://localhost:8000/openai/stream',{

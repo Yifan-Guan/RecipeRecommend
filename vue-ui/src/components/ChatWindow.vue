@@ -14,12 +14,12 @@
     <n-input-group class="chat-message-send">
         <n-input round placeholder = "请输入您的问题"
             type="textarea"
-            :autosize="{ minRows: 1, maxRows: 5}"
+            :autosize="{maxRows: 5}"
             v-model:value="currentUserMessage"
             @keyup.enter="sendUserMessage" 
             class="chat-message-send-input"
         />
-        <n-button strong secondary round
+        <n-button ghost round
             type="primary"
             @click="sendUserMessage"
             class="chat-message-send-button"
@@ -32,7 +32,7 @@
 <script lang="ts"> export default {name:"ChatWindow"}</script>
 <script setup lang="ts">
 import {NCard, NInputGroup ,NFlex, NButton, NInput} from 'naive-ui'
-import {ref, reactive, toRef} from 'vue'
+import {ref, reactive} from 'vue'
 import {nanoid} from 'nanoid'
 import {type ChatMessage} from '@/types'
 import {sendMessageToOpenAI, getContentFromOpenAIResponse} from '@/hooks/chat-with-openai'
@@ -44,7 +44,6 @@ let messagesList: Array<ChatMessage> = reactive([
         content: "Hello! How can I assist you today?"
     }
 ]) 
-let testMessage = ref("test message")
 
 async function sendUserMessage() {
     console.log("sendUserMessage", currentUserMessage.value);
@@ -82,5 +81,12 @@ async function sendUserMessage() {
     margin-left: 5%;
     margin-right: 5%;
     width: 90%;
+}
+.chat-message-send-input {
+    width:50%;
+    margin-right: 10px;
+}
+.chat-message-send-button {
+    margin-left: 10px;
 }
 </style>

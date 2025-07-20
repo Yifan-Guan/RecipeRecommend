@@ -3,21 +3,16 @@
   :locale="zhCN"
   :data-local="dateZhCN"
   >
-  <chatWindow/>
+    <Main/>
   </NConfigProvider>
 </template>
 
 <script lang="ts"> export default {name: "App"}</script>
 <script setup lang="ts">
-import { NConfigProvider, zhCN, dateZhCN } from 'naive-ui';
-import ChatWindow from '@/components/ChatWindow.vue'
-
+import { NConfigProvider, zhCN, dateZhCN, NSpace, NDivider} from 'naive-ui';
+import Main from '@/components/Main.vue';
 </script>
 
 
 <style scoped>
-.app-title {
-  font-size: 40px;
-  text-align: center;
-}
 </style>
