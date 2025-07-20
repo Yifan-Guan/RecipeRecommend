@@ -23,9 +23,17 @@
         </n-avatar>
         <n-button ghost 
             type="primary"
+            @click="showLoginModal = true"
             >
         注册/登录
         </n-button>
+        <n-modal
+        :show="showLoginModal"
+        >
+          <Login
+          :close-login-modal="closeLoginModal"
+          ></Login>
+        </n-modal>
         </n-space>
     </n-flex>
     <n-divider vertical/>
@@ -35,18 +43,21 @@
 <script lang="ts"> export default {name: "Main"}</script>
 <script setup lang="ts">
 import { NSpace, NDivider, NAvatar, NButton, NFlex, NTabs, NTab} from 'naive-ui';
+import {NModal} from 'naive-ui';
 import {ref} from 'vue';
-import { useRoute} from 'vue-router'
 import {useRouter} from 'vue-router'
+import Login from '@/components/Login.vue'
 
-const route = useRoute();
+let showLoginModal = ref(false)
 const router = useRouter();
 
-const activeTab = ref(route.name || 'home');
-
 function handleTabChange(value: string) {
-  activeTab.value = value;
   router.push({ name: value });
+}
+
+function closeLoginModal() {
+  showLoginModal.value = false;
+  console.log("Login modal closed");
 }
 </script>
 
