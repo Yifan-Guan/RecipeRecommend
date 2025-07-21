@@ -230,9 +230,8 @@ const sendUserMessage = () => {
 
 <style scoped>
 .full-container {
-  width: 100vw;
-  height: 100vh;
-  overflow: hidden;
+  height: 100%;
+  padding-bottom: 30px;
 }
 
 .messages-container {
@@ -243,7 +242,7 @@ const sendUserMessage = () => {
 }
 
 .input-area {
-  position: sticky;
+  position: relative;
   bottom: 0;
   background: #fff;
 }
