@@ -18,8 +18,9 @@
         </n-space>
         <n-space>
         <n-avatar round
-        class="user-avatar">
-            U
+        :class="isLoggedIn ? 'logged-in-avatar' : 'guest-avatar'"
+        >
+            {{ avatarText }}
         </n-avatar>
         <n-button ghost 
             type="primary"
@@ -45,10 +46,17 @@
 import { NSpace, NDivider, NAvatar, NButton, NFlex, NTabs, NTab} from 'naive-ui';
 import {NModal} from 'naive-ui';
 import {ref} from 'vue';
+import { storeToRefs } from 'pinia';
 import {useRouter} from 'vue-router'
+import { useUserInfoStore } from '@/stores/user-info-store';
 import Login from '@/components/Login.vue'
 
 let showLoginModal = ref(false)
+const {isLoggedIn, currentUser} = storeToRefs(useUserInfoStore());
+let avatarText = ref(
+  isLoggedIn.value ? currentUser.value?.name?.charAt(0).toUpperCase() : 'G'
+)
+
 const router = useRouter();
 
 function handleTabChange(value: string) {
@@ -65,8 +73,12 @@ function closeLoginModal() {
 .top-bar {
     padding: 20px;
 }
-.user-avatar {
-    color: yellow;
-    background-color: red;
+.guest-avatar {
+    color: white;
+    background-color: gray;
+}
+.logged-in-avatar {
+    color: white;
+    background-color: purple;
 }
 </style>
