@@ -1,113 +1,203 @@
 <template>
-<n-flex vertical>
+  <n-flex vertical class="chat-container">
     <div class="message-view">
-    <n-flex vertical>
-        <n-scrollbar ref="scrollbarRef" style="height: 80vh; overflow-y: auto;">
-        <n-card
-        v-for="(message) in messagesList"
-        :key="nanoid()"
-        :title="message.role"
-        >
-        {{ message.content }}
-        </n-card>
-        </n-scrollbar>
-    </n-flex>
+      <n-scrollbar ref="scrollbarRef" class="message-scroll">
+        <div class="message-list">
+          <div
+            v-for="(message, index) in messagesList"
+            :key="index"
+            :class="['chat-bubble', message.role === 'user' ? 'user' : 'agent']"
+          >
+            <div class="chat-name">
+              {{ message.role === 'user' ? '我' : 'AI 助手' }}
+            </div>
+            <div class="chat-content">
+              {{ message.content }}
+            </div>
+          </div>
+        </div>
+      </n-scrollbar>
     </div>
-    <n-input-group class="chat-message-send">
-        <n-input round placeholder = "请输入您的问题"
-            type="textarea"
-            :autosize="{maxRows: 5}"
-            v-model:value="currentUserMessage"
-            @keyup.enter="sendUserMessage" 
-            class="chat-message-send-input"
-        />
-        <n-button ghost round
-            type="primary"
-            @click="sendUserMessage"
-            class="chat-message-send-button"
-            >Send</n-button>  
-    </n-input-group>
 
-</n-flex>    
+    <div class="chat-input-area">
+      <n-input-group class="chat-input-group">
+        <n-input
+          round
+          type="textarea"
+          placeholder="请输入您的问题"
+          v-model:value="currentUserMessage"
+          :autosize="{ maxRows: 5 }"
+          @keyup.enter="sendUserMessage"
+          class="chat-input"
+        />
+        <n-button
+          ghost
+          round
+          type="primary"
+          @click="sendUserMessage"
+          class="chat-send-button"
+        >
+          Send
+        </n-button>
+      </n-input-group>
+    </div>
+  </n-flex>
 </template>
 
-<script lang="ts"> export default {name:"Chat"}</script>
+
+<script lang="ts">
+export default {
+  name: "Chat"
+}
+</script>
+
 <script setup lang="ts">
-import {NCard, NInputGroup ,NFlex, NButton, NInput, NScrollbar} from 'naive-ui'
-import {ref, reactive, nextTick} from 'vue'
-import {nanoid} from 'nanoid'
-import {type ChatMessage} from '@/types'
-import {sendMessageToOpenAI, getContentFromOpenAIResponse} from '@/hooks/chat-with-openai'
+import { NCard, NInputGroup, NFlex, NButton, NInput, NScrollbar } from 'naive-ui'
+import { ref, reactive, nextTick } from 'vue'
+import { nanoid } from 'nanoid'
+import { type ChatMessage } from '@/types'
+import { sendMessageToOpenAI, getContentFromOpenAIResponse } from '@/hooks/chat-with-openai'
 
 let currentUserMessage = ref("")
 let scrollbarRef = ref()
 let messagesList: Array<ChatMessage> = reactive([
-    {
-        role: "agent",
-        content: "Hello! How can I assist you today?"
-    }
-]) 
+  {
+    role: "agent",
+    content: "Hello! How can I assist you today?"
+  }
+])
 
-// 滚动到底部的函数
 function scrollToBottom() {
-    nextTick(() => {
-        if (scrollbarRef.value) {
-            scrollbarRef.value.scrollTo({
-                top: -100,
-                behavior: 'smooth'
-            });
-        }
-    });
-} 
+  nextTick(() => {
+    const scrollbar = scrollbarRef.value
+    if (scrollbar?.scrollTo) {
+      scrollbar.scrollTo({
+        top: Number.MAX_SAFE_INTEGER,  
+        behavior: 'smooth'
+      })
+    }
+  })
+}
+
 
 async function sendUserMessage() {
-    console.log("sendUserMessage", currentUserMessage.value);
-    if (currentUserMessage.value) {
-        let sendMessage = currentUserMessage.value
-        currentUserMessage.value = "";
-        messagesList.push({
-            role: "user",
-            content: sendMessage
-        });
-        scrollToBottom(); // 添加用户消息后滚动到底部
-        
-        messagesList.push({
-            role: "agent",
-            content: "正在思考中..."
-        });
-        scrollToBottom(); // 添加思考消息后滚动到底部
-        
-        let agentResponse = await sendMessageToOpenAI(sendMessage);
-        if (agentResponse) {
-            await getContentFromOpenAIResponse(agentResponse, messagesList)
-            scrollToBottom(); // 获取到回复后滚动到底部
-        }
-        else {
-            messagesList[messagesList.length - 1].content = "请求失败，请稍后再试";  
-            scrollToBottom(); // 显示错误消息后滚动到底部
-        }
-    }
-}
+  if (currentUserMessage.value.trim()) {
+    let sendMessage = currentUserMessage.value
+    currentUserMessage.value = ""
+    messagesList.push({
+      role: "user",
+      content: sendMessage
+    });
+    scrollToBottom()
 
+    messagesList.push({
+      role: "agent",
+      content: "正在思考中..."
+    });
+    scrollToBottom()
+
+    let agentResponse = await sendMessageToOpenAI(sendMessage)
+    if (agentResponse) {
+      await getContentFromOpenAIResponse(agentResponse, messagesList)
+      scrollToBottom()
+    } else {
+      messagesList[messagesList.length - 1].content = "请求失败，请稍后再试"
+      scrollToBottom()
+    }
+  }
+}
 </script>
 
-<style scope>
+<style scoped>
+.chat-container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background-color: white;
+  padding: 16px;
+  box-sizing: border-box;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
 .message-view {
-    margin-left: 5%;
+  flex: 1;
+  overflow: hidden;
+  margin-bottom: 12px;
 }
-.chat-message-send {
-    left: 0;
-    bottom: 0;
-    margin-bottom: 5%;
-    margin-left: 5%;
-    margin-right: 5%;
-    width: 90%;
+
+.message-scroll {
+  height: 100%;
+  padding: 8px 16px;
 }
-.chat-message-send-input {
-    width:50%;
-    margin-right: 10px;
+
+.message-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
-.chat-message-send-button {
-    margin-left: 10px;
+
+.chat-bubble {
+  max-width: 70%;
+  padding: 12px 16px;
+  border-radius: 16px;
+  font-size: 14px;
+  line-height: 1.5;
+  word-wrap: break-word;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-bubble.agent {
+  align-self: flex-start;
+  background-color: #e9f5ff;
+  color: #333;
+}
+
+.chat-bubble.user {
+  align-self: flex-end;
+  background-color: #d1f2eb;
+  color: #111;
+}
+
+.chat-name {
+  font-size: 12px;
+  font-weight: bold;
+  margin-bottom: 4px;
+  color: #666;
+}
+
+.chat-bubble.agent .chat-name {
+  text-align: left;
+  color: #0077cc;
+}
+
+.chat-bubble.user .chat-name {
+  text-align: right;
+  color: #00aa88;
+}
+
+.chat-content {
+  white-space: pre-wrap;
+}
+
+.chat-input-area {
+  padding: 8px 0;
+  border-top: 1px solid #ddd;
+}
+
+.chat-input-group {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.chat-input {
+  flex: 1;
+}
+
+.chat-send-button {
+  flex-shrink: 0;
 }
 </style>
