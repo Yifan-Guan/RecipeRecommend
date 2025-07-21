@@ -46,7 +46,7 @@
 <script setup lang="ts">
 import { NSpace, NDivider, NAvatar, NButton, NFlex, NTabs, NTab} from 'naive-ui';
 import {NModal} from 'naive-ui';
-import {ref} from 'vue';
+import {ref, watch} from 'vue';
 import { storeToRefs } from 'pinia';
 import {useRouter} from 'vue-router'
 import { useUserInfoStore } from '@/stores/user-info-store';
@@ -57,6 +57,9 @@ const {isLoggedIn, currentUser} = storeToRefs(useUserInfoStore());
 let avatarText = ref(
   isLoggedIn.value ? currentUser.value?.name?.charAt(0).toUpperCase() : 'G'
 )
+watch(isLoggedIn, (newVal) => {
+  avatarText.value = newVal ? currentUser.value?.name?.charAt(0).toUpperCase() : 'G';
+});
 
 const router = useRouter();
 

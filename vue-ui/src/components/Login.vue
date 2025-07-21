@@ -35,13 +35,19 @@
       <n-tab-pane name="signup" tab="注册">
         <n-form :model="signUpUserModel">
           <n-form-item-row label="用户名">
-            <n-input v-model:value="signUpUserModel.signUpUserName" />
+            <n-input 
+            type="text"
+            v-model:value="signUpUserModel.signUpUserName" />
           </n-form-item-row>
           <n-form-item-row label="密码">
-            <n-input v-model:value="signUpUserModel.signUpPassword" />
+            <n-input 
+            type="password"
+            v-model:value="signUpUserModel.signUpPassword" />
           </n-form-item-row>
           <n-form-item-row label="重复密码">
-            <n-input v-model:value="signUpUserModel.signUpConfirmPassword" />
+            <n-input 
+            type="password"
+            v-model:value="signUpUserModel.signUpConfirmPassword" />
           </n-form-item-row>
         </n-form>
         <n-button type="primary" block secondary strong

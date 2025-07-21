@@ -1,22 +1,14 @@
 <template>
-  <div class="full-container">
-    <n-layout has-sider style="height: 100vh">
-      <!-- 侧边栏 - 参考DeepSeek设计 -->
-      <n-layout-sider
+  <n-flex style="height: 80vh; width: 100vw;">
+  <n-layout-sider
         bordered
         :width="240"
         :native-scrollbar="false"
-        content-style="
-          display: flex;
-          flex-direction: column;
-          height: 100%;
-          background: #f7f7f8;
-        "
+        class="chat-sidebar"
       >
         <!-- 创建新对话按钮 -->
         <div style="padding: 12px;">
-          <n-button
-            block
+          <n-button block
             type="primary"
             @click="createNewChat"
             style="height: 40px;"
@@ -32,8 +24,8 @@
         <div style="flex: 1; overflow-y: auto; padding: 0 12px;">
           <n-scrollbar style="max-height: 100%;">
             <div 
-              v-for="(history, index) in chatHistory"
-              :key="index"
+              v-for="(history) in chatHistory"
+              :key="nanoid()"
               class="history-item"
               :class="{ active: currentChatId === history.id }"
               @click="loadChatHistory(history.id)"
@@ -42,8 +34,7 @@
                 <ChatbubbleEllipses />
               </n-icon>
               <span class="history-title">{{ history.title }}</span>
-              <n-button
-                text
+              <n-button text
                 style="margin-left: auto;"
                 @click.stop="deleteHistory(history.id)"
               >
@@ -64,92 +55,74 @@
             设置
           </n-button>
         </div>
-      </n-layout-sider>
+  </n-layout-sider>
 
-      <!-- 主内容区 -->
-      <n-layout>
-        <n-layout-content content-style="height: 100vh; display: flex; flex-direction: column;">
-          <!-- 消息区域 -->
-          <div class="messages-container">
-            <n-card
-              v-for="(message, index) in messagesList"
-              :key="index"
-              :title="message.role === 'user' ? '你' : 'DeepSeek'"
-              style="margin: 12px;"
-              :bordered="false"
-              size="small"
-            >
+  <n-flex vertical class="chat-container">
+    <div class="message-view">
+      <n-scrollbar ref="scrollbarRef" class="message-scroll">
+        <div class="message-list">
+          <div
+            v-for="(message, index) in messagesList"
+            :key="index"
+            :class="['chat-bubble', message.role === 'user' ? 'user' : 'agent']"
+          >
+            <div class="chat-name">
+              {{ message.role === 'user' ? '我' : 'AI 助手' }}
+            </div>
+            <div class="chat-content">
               {{ message.content }}
-            </n-card>
+            </div>
           </div>
+        </div>
+      </n-scrollbar>
+    </div>
 
-          <!-- 输入区域 -->
-          <div class="input-area">
-            <n-input-group style="padding: 16px; background: #fff; border-top: 1px solid #eee;">
-              <n-input 
-                round
-                placeholder="输入消息..."
-                type="textarea"
-                :autosize="{maxRows: 5}"
-                v-model="currentUserMessage"
-                @keyup.enter="sendUserMessage"
-                style="flex: 1;"
-              />
-              <n-button 
-                round
-                type="primary"
-                @click="sendUserMessage"
-                style="margin-left: 12px;"
-              >
-                <template #icon>
-                  <n-icon><Send /></n-icon>
-                </template>
-                发送
-              </n-button>
-            </n-input-group>
-          </div>
-        </n-layout-content>
-      </n-layout>
-    </n-layout>
-  </div>
+    <div class="chat-input-area">
+      <n-input-group class="chat-input-group">
+        <n-input
+          round
+          type="textarea"
+          placeholder="请输入您的问题"
+          v-model:value="currentUserMessage"
+          :autosize="{ maxRows: 5 }"
+          @keyup.enter="sendUserMessage"
+          class="chat-input"
+        />
+        <n-button
+          ghost
+          round
+          type="primary"
+          @click="sendUserMessage"
+          class="chat-send-button"
+        >
+          Send
+          <n-icon style="margin-left: 8px;">
+            <Send />
+          </n-icon>
+        </n-button>
+      </n-input-group>
+    </div>
+  </n-flex>
+  </n-flex>
 </template>
 
+
+<script lang="ts">export default {name: "Chat"}</script>
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, nextTick } from 'vue'
 import { 
-  NLayout, 
-  NLayoutSider, 
-  NLayoutContent,
-  NButton,
-  NIcon,
-  NCard,
-  NInput,
-  NInputGroup,
-  NScrollbar
+  NIcon, NInputGroup, NFlex, NButton, NInput, NScrollbar, NLayoutSider, NSpace,
 } from 'naive-ui'
 import { 
-  Add, 
-  Send, 
-  ChatbubbleEllipses,
-  Settings, 
-  Close 
+  Add, Send, ChatbubbleEllipses, Settings, Close 
 } from '@vicons/ionicons5'
-
-// 消息类型
-interface ChatMessage {
-  role: string
-  content: string
-}
-
-// 历史记录类型
-interface ChatHistory {
-  id: string
-  title: string
-  messages: ChatMessage[]
-}
+import { nanoid } from 'nanoid'
+import { type ChatMessage, type ChatHistory } from '@/types'
+import { sendMessageToOpenAI, getContentFromOpenAIResponse } from '@/hooks/chat-with-openai'
 
 // 数据
 const currentUserMessage = ref('')
+const scrollbarRef = ref()
 const currentChatId = ref('')
 const messagesList = reactive<ChatMessage[]>([])
 const chatHistory = reactive<ChatHistory[]>([
@@ -164,8 +137,8 @@ const createNewChat = () => {
   currentChatId.value = newId
   messagesList.length = 0
   messagesList.push({ 
-    role: 'assistant', 
-    content: '我是DeepSeek，请问有什么可以帮助您？' 
+    role: 'agent', 
+    content: '我是AI助手，请问有什么可以帮助您？' 
   })
   chatHistory.unshift({
     id: newId,
@@ -195,59 +168,67 @@ const deleteHistory = (id: string) => {
   }
 }
 
-// 发送消息
-const sendUserMessage = () => {
-  if (!currentUserMessage.value.trim()) return
+function scrollToBottom() {
+  nextTick(() => {
+    const scrollbar = scrollbarRef.value
+    if (scrollbar?.scrollTo) {
+      scrollbar.scrollTo({
+        top: Number.MAX_SAFE_INTEGER,  
+        behavior: 'smooth'
+      })
+    }
+  })
+}
 
-  const userMessage = currentUserMessage.value
-  currentUserMessage.value = ''
+async function sendUserMessage() {
+  if (currentUserMessage.value.trim()) {
+    let sendMessage = currentUserMessage.value
+    currentUserMessage.value = ""
+    messagesList.push({
+      role: "user",
+      content: sendMessage
+    });
+    scrollToBottom()
 
-  messagesList.push(
-    { role: 'user', content: userMessage },
-    { role: 'assistant', content: '正在思考...' }
-  )
+    messagesList.push({
+      role: "agent",
+      content: "正在思考中..."
+    });
+    scrollToBottom()
 
-  // 更新当前对话历史
-  const currentHistory = chatHistory.find(item => item.id === currentChatId.value)
-  if (currentHistory) {
+    let agentResponse = await sendMessageToOpenAI(sendMessage)
+    if (agentResponse) {
+      await getContentFromOpenAIResponse(agentResponse, messagesList)
+      scrollToBottom()
+    } else {
+      messagesList[messagesList.length - 1].content = "请求失败，请稍后再试"
+      scrollToBottom()
+    }
+
+    const currentHistory = chatHistory.find(item => item.id === currentChatId.value)
+    if (currentHistory) {
     currentHistory.messages = [...messagesList]
     // 自动生成标题（取第一条用户消息的前20个字符）
-    if (messagesList.length >= 2) {
-      const firstUserMessage = messagesList.find(m => m.role === 'user')
-      if (firstUserMessage) {
-        currentHistory.title = firstUserMessage.content.slice(0, 20) + (firstUserMessage.content.length > 20 ? '...' : '')
+      if (messagesList.length >= 2) {
+        const firstUserMessage = messagesList.find(m => m.role === 'user')
+        if (firstUserMessage) {
+          currentHistory.title = firstUserMessage.content.slice(0, 20) + (firstUserMessage.content.length > 20 ? '...' : '')
+        }
       }
     }
   }
-
-  // 模拟AI回复
-  setTimeout(() => {
-    messagesList[messagesList.length - 1].content = 
-      `这是对"${userMessage}"的模拟回复。实际使用时请接入AI API。`
-  }, 1000)
 }
+
 </script>
 
 <style scoped>
-.full-container {
+.chat-sidebar {
+  background: #f7f7f8;
+  display: flex;
+  flex-direction: column;
   height: 100%;
-  padding-bottom: 30px;
 }
 
-.messages-container {
-  flex: 1;
-  overflow-y: auto;
-  padding: 12px;
-  background: #fafafa;
-}
-
-.input-area {
-  position: relative;
-  bottom: 0;
-  background: #fff;
-}
-
-/* 历史记录项样式 */
 .history-item {
   display: flex;
   align-items: center;
@@ -272,5 +253,97 @@ const sendUserMessage = () => {
   overflow: hidden;
   text-overflow: ellipsis;
   font-size: 14px;
+}
+
+.chat-container {
+  flex: 1;
+  height: 85vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background-color: white;
+  padding: 16px;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.message-view {
+  flex: 1;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.message-scroll {
+  height: 80%;
+  padding: 8px 16px;
+}
+
+.message-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.chat-bubble {
+  max-width: 70%;
+  padding: 12px 16px;
+  border-radius: 16px;
+  font-size: 14px;
+  line-height: 1.5;
+  word-wrap: break-word;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-bubble.agent {
+  align-self: flex-start;
+  background-color: #e9f5ff;
+  color: #333;
+}
+
+.chat-bubble.user {
+  align-self: flex-end;
+  background-color: #d1f2eb;
+  color: #111;
+}
+
+.chat-name {
+  font-size: 12px;
+  font-weight: bold;
+  margin-bottom: 4px;
+  color: #666;
+}
+
+.chat-bubble.agent .chat-name {
+  text-align: left;
+  color: #0077cc;
+}
+
+.chat-bubble.user .chat-name {
+  text-align: right;
+  color: #00aa88;
+}
+
+.chat-content {
+  white-space: pre-wrap;
+}
+
+.chat-input-area {
+  padding: 8px 0;
+  border-top: 1px solid #ddd;
+}
+
+.chat-input-group {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.chat-input {
+  flex: 1;
+}
+
+.chat-send-button {
+  flex-shrink: 0;
 }
 </style>
