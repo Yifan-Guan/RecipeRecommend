@@ -44,7 +44,8 @@
             <n-input v-model:value="signUpUserModel.signUpConfirmPassword" />
           </n-form-item-row>
         </n-form>
-        <n-button type="primary" block secondary strong>
+        <n-button type="primary" block secondary strong
+        @click="signUp()">
           注册
         </n-button>
         <n-button block secondary strong 
@@ -93,6 +94,16 @@ function signIn() {
     password: logInUserModel.logInPassword
   });
   if (result) {
+    closeLoginModal();
+  } else {
+  }
+}
+function signUp() {
+  if (signUpUserModel.signUpPassword === signUpUserModel.signUpConfirmPassword) {
+    userInfoStore.signIn({
+      name: signUpUserModel.signUpUserName,
+      password: signUpUserModel.signUpPassword
+    });
     closeLoginModal();
   } else {
   }

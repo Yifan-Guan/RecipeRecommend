@@ -43,6 +43,15 @@ export const useUserInfoStore = defineStore('userInfo', {
                 return true
             }
             return false
+        },
+        signIn(user: { name: string, password: string }) {
+            if (!this.userExists(user.name)) {
+                this.addUser({
+                    id: (this.userList.length + 1).toString(),
+                    name: user.name,
+                    password: user.password
+                })
+            }
         }
     }
 })

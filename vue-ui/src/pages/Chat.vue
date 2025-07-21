@@ -2,6 +2,7 @@
 <n-flex vertical>
     <div class="message-view">
     <n-flex vertical>
+        <n-scrollbar ref="scrollbarRef" style="height: 80vh; overflow-y: auto;">
         <n-card
         v-for="(message) in messagesList"
         :key="nanoid()"
@@ -9,6 +10,7 @@
         >
         {{ message.content }}
         </n-card>
+        </n-scrollbar>
     </n-flex>
     </div>
     <n-input-group class="chat-message-send">
@@ -31,19 +33,32 @@
 
 <script lang="ts"> export default {name:"Chat"}</script>
 <script setup lang="ts">
-import {NCard, NInputGroup ,NFlex, NButton, NInput} from 'naive-ui'
-import {ref, reactive} from 'vue'
+import {NCard, NInputGroup ,NFlex, NButton, NInput, NScrollbar} from 'naive-ui'
+import {ref, reactive, nextTick} from 'vue'
 import {nanoid} from 'nanoid'
 import {type ChatMessage} from '@/types'
 import {sendMessageToOpenAI, getContentFromOpenAIResponse} from '@/hooks/chat-with-openai'
 
 let currentUserMessage = ref("")
+let scrollbarRef = ref()
 let messagesList: Array<ChatMessage> = reactive([
     {
         role: "agent",
         content: "Hello! How can I assist you today?"
     }
 ]) 
+
+// 滚动到底部的函数
+function scrollToBottom() {
+    nextTick(() => {
+        if (scrollbarRef.value) {
+            scrollbarRef.value.scrollTo({
+                top: -100,
+                behavior: 'smooth'
+            });
+        }
+    });
+} 
 
 async function sendUserMessage() {
     console.log("sendUserMessage", currentUserMessage.value);
@@ -54,16 +69,22 @@ async function sendUserMessage() {
             role: "user",
             content: sendMessage
         });
+        scrollToBottom(); // 添加用户消息后滚动到底部
+        
         messagesList.push({
             role: "agent",
             content: "正在思考中..."
         });
+        scrollToBottom(); // 添加思考消息后滚动到底部
+        
         let agentResponse = await sendMessageToOpenAI(sendMessage);
         if (agentResponse) {
             await getContentFromOpenAIResponse(agentResponse, messagesList)
+            scrollToBottom(); // 获取到回复后滚动到底部
         }
         else {
             messagesList[messagesList.length - 1].content = "请求失败，请稍后再试";  
+            scrollToBottom(); // 显示错误消息后滚动到底部
         }
     }
 }
