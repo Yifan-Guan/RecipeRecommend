@@ -5,6 +5,7 @@
         <n-space>
         <n-tabs 
         type="line"
+        v-model:value="router.currentRoute.value.name"
         animated
         @update:value="handleTabChange"
         >

@@ -34,7 +34,7 @@
 <script lang="ts"> export default {name:"Chat"}</script>
 <script setup lang="ts">
 import {NCard, NInputGroup ,NFlex, NButton, NInput, NScrollbar} from 'naive-ui'
-import {ref, reactive, nextTick} from 'vue'
+import {ref, reactive, nextTick, watchEffect} from 'vue'
 import {nanoid} from 'nanoid'
 import {type ChatMessage} from '@/types'
 import {sendMessageToOpenAI, getContentFromOpenAIResponse} from '@/hooks/chat-with-openai'
@@ -50,15 +50,18 @@ let messagesList: Array<ChatMessage> = reactive([
 
 // 滚动到底部的函数
 function scrollToBottom() {
-    nextTick(() => {
-        if (scrollbarRef.value) {
-            scrollbarRef.value.scrollTo({
-                top: -100,
-                behavior: 'smooth'
-            });
-        }
+    scrollbarRef.value?.scrollTo({
+        top: scrollbarRef.value.scrollHeight,
+        behavior: 'smooth'
     });
-} 
+}
+
+// 监听消息列表变化，自动滚动到底部
+watchEffect(() => {
+    if (messagesList.length > 0) {
+        scrollToBottom();
+    }
+}); 
 
 async function sendUserMessage() {
     console.log("sendUserMessage", currentUserMessage.value);
@@ -69,22 +72,18 @@ async function sendUserMessage() {
             role: "user",
             content: sendMessage
         });
-        scrollToBottom(); // 添加用户消息后滚动到底部
         
         messagesList.push({
             role: "agent",
             content: "正在思考中..."
         });
-        scrollToBottom(); // 添加思考消息后滚动到底部
         
         let agentResponse = await sendMessageToOpenAI(sendMessage);
         if (agentResponse) {
             await getContentFromOpenAIResponse(agentResponse, messagesList)
-            scrollToBottom(); // 获取到回复后滚动到底部
         }
         else {
             messagesList[messagesList.length - 1].content = "请求失败，请稍后再试";  
-            scrollToBottom(); // 显示错误消息后滚动到底部
         }
     }
 }
