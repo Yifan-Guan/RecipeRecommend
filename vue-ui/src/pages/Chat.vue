@@ -69,9 +69,10 @@
             <div class="chat-name">
               {{ message.role === 'user' ? '我' : 'AI 助手' }}
             </div>
-            <div class="chat-content">
-              {{ message.content }}
-            </div>
+              <div
+                class="chat-content"
+                v-html="renderMarkdown(message.content)"
+              ></div>
           </div>
         </div>
       </n-scrollbar>
@@ -119,6 +120,15 @@ import {
 import { nanoid } from 'nanoid'
 import { type ChatMessage, type ChatHistory } from '@/types'
 import { sendMessageToOpenAI, getContentFromOpenAIResponse } from '@/hooks/chat-with-openai'
+
+import { marked } from 'marked'
+
+// Markdown 渲染函数
+function renderMarkdown(text: string): string {
+  return marked(text, {
+    breaks: true // 支持换行
+  })
+}
 
 // 数据
 const currentUserMessage = ref('')
@@ -325,7 +335,8 @@ async function sendUserMessage() {
 }
 
 .chat-content {
-  white-space: pre-wrap;
+  white-space: normal;
+  line-height: 0.1;
 }
 
 .chat-input-area {
@@ -345,5 +356,9 @@ async function sendUserMessage() {
 
 .chat-send-button {
   flex-shrink: 0;
+}
+
+.chat-content p {
+  margin: 0;
 }
 </style>

@@ -4,7 +4,7 @@ from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from langserve import add_routes
 from langchain_openai import ChatOpenAI 
-from .testStream import chain
+from app.testStream import chain
 
 load_dotenv()
 
