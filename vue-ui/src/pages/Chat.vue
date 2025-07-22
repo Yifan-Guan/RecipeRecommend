@@ -336,7 +336,7 @@ async function sendUserMessage() {
 
 .chat-content {
   white-space: normal;
-  line-height: 0.1;
+  line-height: 1.5;
 }
 
 .chat-input-area {
