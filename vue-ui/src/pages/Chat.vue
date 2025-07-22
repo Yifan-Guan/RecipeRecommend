@@ -109,34 +109,105 @@
 
 <script lang="ts">export default {name: "Chat"}</script>
 <script setup lang="ts">
-import { ref, reactive, nextTick } from 'vue'
+import { ref, reactive, nextTick, onMounted, watch} from 'vue'
 import { 
-  NIcon, NInputGroup, NFlex, NButton, NInput, NScrollbar, NLayoutSider, NSpace,
+  NIcon, NInputGroup, NFlex, NButton, NInput, NScrollbar, NLayoutSider,
 } from 'naive-ui'
 import { 
   Add, Send, ChatbubbleEllipses, Settings, Close 
 } from '@vicons/ionicons5'
 import { nanoid } from 'nanoid'
-import { type ChatMessage, type ChatHistory } from '@/types'
+import { 
+  type ChatMessage, 
+  type ChatHistory,
+  type ChatHistoryInfo, 
+  type ChatHistoryContent 
+} from '@/types'
 import { sendMessageToOpenAI, getContentFromOpenAIResponse } from '@/hooks/chat-with-openai'
+import {
+  fetchChatHistoryInfo,
+  fetchChatHistoryContentById,
+  addChatHistoryInfo,
+  addChatHistoryContent,
+  deleteChatHistoryInfo,
+  updateChatHistoryNameById
+} from '@/hooks/history-manage'
+import { useUserInfoStore } from '@/stores/user-info-store'
+import { storeToRefs } from 'pinia'
 
 // 数据
+const { isLoggedIn, currentUser} = storeToRefs(useUserInfoStore())
 const currentUserMessage = ref('')
 const scrollbarRef = ref()
 const currentChatId = ref('')
 const messagesList = reactive<ChatMessage[]>([])
-const chatHistory = reactive<ChatHistory[]>([
-  { id: '1', title: '如何学习Vue3', messages: [{ role: 'assistant', content: 'Vue3学习建议...' }] },
-  { id: '2', title: 'Python基础问题', messages: [{ role: 'assistant', content: 'Python入门指南...' }] },
-  { id: '3', title: '项目架构讨论', messages: [{ role: 'assistant', content: '关于架构设计的建议...' }] }
-])
+const chatHistory = reactive<ChatHistory[]>([])
 
+onMounted(async () => {
+  // 初始化加载历史记录
+  if (isLoggedIn.value && currentUser.value) {
+    await loadChatHistoryList()
+  }
+  // 创建默认对话
+  createNewChat()
+})
+
+// 监听用户登录状态和当前用户变化
+watch([isLoggedIn, currentUser], async ([newIsLoggedIn, newCurrentUser], [oldIsLoggedIn, oldCurrentUser]) => {
+  // 用户刚登录或切换用户时加载聊天历史
+  if (newIsLoggedIn && newCurrentUser && (!oldIsLoggedIn || newCurrentUser?.id !== oldCurrentUser?.id)) {
+    // 清空当前聊天历史
+    chatHistory.length = 0
+    await loadChatHistoryList()
+    createNewChat()
+  }
+}, { deep: true })
+
+async function loadChatHistoryList() {
+  // 检查用户是否已登录
+  if (!isLoggedIn.value || !currentUser.value?.id) {
+    console.log('用户未登录，跳过加载聊天历史')
+    return
+  }
+
+  try {
+    const historyInfoList = await fetchChatHistoryInfo()
+    if (historyInfoList) {
+      for (const info of historyInfoList) {
+        if (info[2] === currentUser.value.id) {
+          const historyItem = {
+            id: info[0],
+            title: info[1],
+            messages: [] as ChatMessage[]
+          }
+          
+          const content = await fetchChatHistoryContentById(info[0])
+          if (content) {
+            content.forEach((msg: [string, string, string, string]) => {
+              historyItem.messages.push({
+                id: msg[1],
+                role: msg[2],
+                content: msg[3]
+              })
+            })
+          }
+          
+          chatHistory.push(historyItem)
+        }
+      }
+      console.log(`加载了 ${chatHistory.length} 条聊天历史记录`)
+    }
+  } catch (error) {
+    console.error('加载聊天历史失败:', error)
+  }
+}
 // 创建新对话
-const createNewChat = () => {
+async function createNewChat() {
   const newId = Date.now().toString()
   currentChatId.value = newId
   messagesList.length = 0
   messagesList.push({ 
+    id: messagesList.length.toString(),
     role: 'agent', 
     content: '我是AI助手，请问有什么可以帮助您？' 
   })
@@ -144,6 +215,11 @@ const createNewChat = () => {
     id: newId,
     title: '新对话',
     messages: [...messagesList]
+  })
+  await addChatHistoryInfo(<ChatHistoryInfo>{
+    id: newId,
+    title: '新对话',
+    userId: currentUser.value?.id
   })
 }
 
@@ -158,7 +234,7 @@ const loadChatHistory = (id: string) => {
 }
 
 // 删除历史记录
-const deleteHistory = (id: string) => {
+async function deleteHistory(id: string) {
   const index = chatHistory.findIndex(item => item.id === id)
   if (index !== -1) {
     chatHistory.splice(index, 1)
@@ -166,6 +242,7 @@ const deleteHistory = (id: string) => {
       createNewChat()
     }
   }
+  await deleteChatHistoryInfo(id)
 }
 
 function scrollToBottom() {
@@ -185,12 +262,14 @@ async function sendUserMessage() {
     let sendMessage = currentUserMessage.value
     currentUserMessage.value = ""
     messagesList.push({
+      id: messagesList.length.toString(),
       role: "user",
       content: sendMessage
     });
     scrollToBottom()
 
     messagesList.push({
+      id: messagesList.length.toString(),
       role: "agent",
       content: "正在思考中..."
     });
@@ -204,6 +283,19 @@ async function sendUserMessage() {
       messagesList[messagesList.length - 1].content = "请求失败，请稍后再试"
       scrollToBottom()
     }
+    await addChatHistoryContent(<ChatHistoryContent>{
+      id: currentChatId.value,
+      index: (messagesList.length - 2),
+      role: messagesList[messagesList.length - 2].role,
+      content: messagesList[messagesList.length - 2].content,
+    })
+    await addChatHistoryContent(<ChatHistoryContent>{
+      id: currentChatId.value,
+      index: (messagesList.length - 1),
+      role: messagesList[messagesList.length - 1].role,
+      content: messagesList[messagesList.length - 1].content,
+    })
+
 
     const currentHistory = chatHistory.find(item => item.id === currentChatId.value)
     if (currentHistory) {
@@ -213,6 +305,7 @@ async function sendUserMessage() {
         const firstUserMessage = messagesList.find(m => m.role === 'user')
         if (firstUserMessage) {
           currentHistory.title = firstUserMessage.content.slice(0, 20) + (firstUserMessage.content.length > 20 ? '...' : '')
+          await updateChatHistoryNameById(currentHistory.id, currentHistory.title)
         }
       }
     }

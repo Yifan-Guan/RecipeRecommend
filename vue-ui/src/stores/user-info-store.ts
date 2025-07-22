@@ -5,7 +5,7 @@ import {type User} from '@/types'
 export const useUserInfoStore = defineStore('userInfo', {
     state: () => ({
         isLoggedIn: false,
-        currentUser: null as { id: string, name: string } | null,
+        currentUser: {id: "guest", name: "Guest"} as { id: string, name: string } | null,
         userList: [{}] as Array<User>
     }),
     getters: {
