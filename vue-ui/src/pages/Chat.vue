@@ -67,7 +67,7 @@
             :class="['chat-bubble', message.role === 'user' ? 'user' : 'agent']"
           >
             <div class="chat-name">
-              {{ message.role === 'user' ? '我' : 'AI 助手' }}
+              {{ message.role === 'user' ? (currentUser?.name || '我') : 'AI 助手' }}
             </div>
             <div class="chat-content">
               {{ message.content }}
@@ -140,6 +140,7 @@ const { isLoggedIn, currentUser} = storeToRefs(useUserInfoStore())
 const currentUserMessage = ref('')
 const scrollbarRef = ref()
 const currentChatId = ref('')
+const chatOnGoing = ref(false)
 const messagesList = reactive<ChatMessage[]>([])
 const chatHistory = reactive<ChatHistory[]>([])
 
@@ -216,11 +217,8 @@ async function createNewChat() {
     title: '新对话',
     messages: [...messagesList]
   })
-  await addChatHistoryInfo(<ChatHistoryInfo>{
-    id: newId,
-    title: '新对话',
-    userId: currentUser.value?.id
-  })
+  chatOnGoing.value = false
+
 }
 
 // 加载历史记录
@@ -283,6 +281,17 @@ async function sendUserMessage() {
       messagesList[messagesList.length - 1].content = "请求失败，请稍后再试"
       scrollToBottom()
     }
+
+    if(!chatOnGoing.value) {
+      chatOnGoing.value = true
+      const firstUserMessage = messagesList[messagesList.length - 2].content
+      const historyTitle = (firstUserMessage? firstUserMessage.slice(0, 20) + (firstUserMessage.length > 20 ? '...' : '') : '新对话')
+      await addChatHistoryInfo(<ChatHistoryInfo>{
+        id: currentChatId.value,
+        title: historyTitle,
+        userId: currentUser.value?.id || ''
+      })
+    }
     await addChatHistoryContent(<ChatHistoryContent>{
       id: currentChatId.value,
       index: (messagesList.length - 2),
@@ -295,7 +304,6 @@ async function sendUserMessage() {
       role: messagesList[messagesList.length - 1].role,
       content: messagesList[messagesList.length - 1].content,
     })
-
 
     const currentHistory = chatHistory.find(item => item.id === currentChatId.value)
     if (currentHistory) {
