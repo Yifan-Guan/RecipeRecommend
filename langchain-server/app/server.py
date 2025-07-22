@@ -10,6 +10,7 @@ from .database.model import add_history_info, add_history_content, delete_histor
 from .database.model import get_all_history_info, get_history_content_by_id
 from pydantic import BaseModel
 from typing import List, Tuple
+from app.testStream import chain
 
 load_dotenv()
 

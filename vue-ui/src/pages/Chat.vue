@@ -69,9 +69,10 @@
             <div class="chat-name">
               {{ message.role === 'user' ? (currentUser?.name || '我') : 'AI 助手' }}
             </div>
-            <div class="chat-content">
-              {{ message.content }}
-            </div>
+              <div
+                class="chat-content"
+                v-html="renderMarkdown(message.content)"
+              ></div>
           </div>
         </div>
       </n-scrollbar>
@@ -134,6 +135,15 @@ import {
 } from '@/hooks/history-manage'
 import { useUserInfoStore } from '@/stores/user-info-store'
 import { storeToRefs } from 'pinia'
+
+import { marked } from 'marked'
+
+// Markdown 渲染函数
+function renderMarkdown(text: string) {
+  return marked(text, {
+    breaks: true // 支持换行
+  })
+}
 
 // 数据
 const { isLoggedIn, currentUser} = storeToRefs(useUserInfoStore())
@@ -427,7 +437,8 @@ async function sendUserMessage() {
 }
 
 .chat-content {
-  white-space: pre-wrap;
+  white-space: normal;
+  line-height: 1.5;
 }
 
 .chat-input-area {
@@ -447,5 +458,9 @@ async function sendUserMessage() {
 
 .chat-send-button {
   flex-shrink: 0;
+}
+
+.chat-content p {
+  margin: 0;
 }
 </style>
