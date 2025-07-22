@@ -1,10 +1,13 @@
 DROP DATABASE IF EXISTS `recipe-recommend-db`;
 CREATE DATABASE `recipe-recommend-db`;
+DROP DATABASE IF EXISTS `recipe-recommend-message-history-db`;
+CREATE DATABASE `recipe-recommend-message-history-db`;
 
 USE mysql;
-DROP USER `recipe-recommend-db-manager`@`localhost`;
+DROP USER IF EXISTS `recipe-recommend-db-manager`@`localhost`;
 CREATE USER IF NOT EXISTS `recipe-recommend-db-manager`@`localhost` IDENTIFIED BY '12345';
 GRANT ALL PRIVILEGES ON `recipe-recommend-db`.* TO `recipe-recommend-db-manager`@`localhost`;
+GRANT ALL PRIVILEGES ON `recipe-recommend-message-history-db`.* TO `recipe-recommend-db-manager`@`localhost`;
 
 USE `recipe-recommend-db`;
 DROP TABLE IF EXISTS `user-info`;

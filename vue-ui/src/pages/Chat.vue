@@ -125,6 +125,7 @@ import {
   type ChatHistoryContent 
 } from '@/types'
 import { sendMessageToOpenAI, getContentFromOpenAIResponse } from '@/hooks/chat-with-openai'
+import { sendMessageToRecommender, getContentFromRecommenderResponse } from '@/hooks/chat-with-recommender'
 import {
   fetchChatHistoryInfo,
   fetchChatHistoryContentById,
@@ -283,9 +284,9 @@ async function sendUserMessage() {
     });
     scrollToBottom()
 
-    let agentResponse = await sendMessageToOpenAI(sendMessage)
+    let agentResponse = await sendMessageToRecommender(sendMessage, currentChatId.value)
     if (agentResponse) {
-      await getContentFromOpenAIResponse(agentResponse, messagesList)
+      await getContentFromRecommenderResponse(agentResponse, messagesList)
       scrollToBottom()
     } else {
       messagesList[messagesList.length - 1].content = "请求失败，请稍后再试"

@@ -5,12 +5,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from langserve import add_routes
 from langchain_openai import ChatOpenAI 
 from .testStream import chain
+from .recommend import Recommender
 from .database.model import add_user, get_all_users, update_history_name_by_id
 from .database.model import add_history_info, add_history_content, delete_history_info
 from .database.model import get_all_history_info, get_history_content_by_id
 from pydantic import BaseModel
-from typing import List, Tuple
-from app.testStream import chain
 
 load_dotenv()
 
@@ -40,7 +39,11 @@ add_routes(
     path="/chain"
 )
 
-
+add_routes(
+    app,
+    Recommender,
+    path="/recommender"
+)
 
 # Pydantic models for API
 class UserCreate(BaseModel):

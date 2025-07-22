@@ -1,18 +1,21 @@
 
-async function sendMessageToOpenAI(message: string){
-    let response = await fetch('http://localhost:8000/openai/stream',{
+async function sendMessageToRecommender(message: string, sessionId: string) {
+    console.log("send message to recommender", message);
+    let response = await fetch('http://localhost:8000/recommender/stream', {
         method: 'post',
-        body: JSON.stringify({ 
-            input:message,
-            config:{},
-            kwargs:{},
-        })
-        }
-    )
-    return response
+        body: JSON.stringify({
+            input: { input: message },
+            config: {
+                configurable: {
+                    session_id: sessionId
+                }},
+            kwargs: {},
+        }),
+    });
+    return response;
 }
 
-async function getContentFromOpenAIResponse(response: any, messageList: any) {
+async function getContentFromRecommenderResponse(response: any, messageList: any) {
     messageList[messageList.length - 1].content = ""
     const reader = response.body?.getReader()
     const decoder = new TextDecoder('utf-8')
@@ -32,5 +35,4 @@ async function getContentFromOpenAIResponse(response: any, messageList: any) {
     }    
 }
 
-
-export { sendMessageToOpenAI, getContentFromOpenAIResponse }
+export { sendMessageToRecommender, getContentFromRecommenderResponse }
