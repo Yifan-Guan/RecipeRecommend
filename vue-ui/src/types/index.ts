@@ -9,3 +9,9 @@ export interface ChatHistory {
   title: string
   messages: ChatMessage[]
 }
+
+export interface User {
+  id: string
+  name: string
+  password: string
+}

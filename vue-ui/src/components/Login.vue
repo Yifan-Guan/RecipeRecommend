@@ -68,11 +68,16 @@
 <script setup lang="ts">
 import { NCard, NTabs, NTabPane, NForm, NFormItemRow, NInput, NButton } from 'naive-ui'
 import {ref, reactive} from 'vue';
+import { onBeforeMount, onMounted } from 'vue';
 import { useUserInfoStore } from '@/stores/user-info-store';
 
 let {closeLoginModal}= defineProps(['closeLoginModal']);
 
 const userInfoStore = useUserInfoStore();
+
+onMounted(async () => {
+  await userInfoStore.fetchAllUsers();
+});
 
 let logInUserModel = reactive({
   logInUserName: '',
@@ -104,13 +109,15 @@ function signIn() {
   } else {
   }
 }
-function signUp() {
+async function signUp() {
   if (signUpUserModel.signUpPassword === signUpUserModel.signUpConfirmPassword) {
-    userInfoStore.signIn({
+      const result = await userInfoStore.signUp({
       name: signUpUserModel.signUpUserName,
       password: signUpUserModel.signUpPassword
     });
-    closeLoginModal();
+    if (result) {
+      closeLoginModal();
+    }
   } else {
   }
 }

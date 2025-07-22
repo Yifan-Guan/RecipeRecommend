@@ -1,18 +1,12 @@
 import {defineStore} from 'pinia'
+import {getAllUsers, addUser} from '@/hooks/user-manage'
+import {type User} from '@/types'
 
 export const useUserInfoStore = defineStore('userInfo', {
     state: () => ({
         isLoggedIn: false,
         currentUser: null as { id: string, name: string } | null,
-        userList: [{
-            id: '0',
-            name: 'admin',
-            password: 'admin123'
-        }] as Array<{
-            id: string,
-            name: string,
-            password: string,
-        }>
+        userList: [{}] as Array<User>
     }),
     getters: {
         getUserList: (state) => state.userList,
@@ -26,6 +20,21 @@ export const useUserInfoStore = defineStore('userInfo', {
         }
     },
     actions: {
+        async fetchAllUsers() {
+            try {
+                this.userList = []
+                const users = await getAllUsers()
+                users.map((user: [string, string, string]) => {
+                    this.userList.push({
+                        id: user[0],
+                        name: user[1],
+                        password: user[2]
+                    })
+                })
+            } catch (error) {
+                console.error("Error fetching users:", error)
+            }
+        },
         addUser(user: { id: string, name: string, password: string }) {
             this.userList.push(user)
         },
@@ -44,14 +53,23 @@ export const useUserInfoStore = defineStore('userInfo', {
             }
             return false
         },
-        signIn(user: { name: string, password: string }) {
+        async signUp(user: { name: string, password: string }) {
             if (!this.userExists(user.name)) {
                 this.addUser({
                     id: (this.userList.length + 1).toString(),
                     name: user.name,
                     password: user.password
                 })
+                const response = await addUser({
+                    id: (this.userList.length + 1).toString(),
+                    name: user.name,
+                    password: user.password
+                })
+                if (response.message === 'User added successfully') {
+                    return true
+                }
             }
+            return false
         }
     }
 })

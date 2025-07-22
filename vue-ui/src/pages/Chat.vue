@@ -305,6 +305,7 @@ async function sendUserMessage() {
   align-self: flex-end;
   background-color: #d1f2eb;
   color: #111;
+  margin-right: 20px;
 }
 
 .chat-name {
