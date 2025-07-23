@@ -8,7 +8,7 @@ from .testStream import chain
 from .recommend import Recommender
 from .database.model import add_user, get_all_users, update_history_name_by_id
 from .database.model import add_history_info, add_history_content, delete_history_info
-from .database.model import get_all_history_info, get_history_content_by_id
+from .database.model import get_all_history_info, get_history_content_by_id, get_all_recipes
 from pydantic import BaseModel
 
 load_dotenv()
@@ -90,6 +90,17 @@ async def get_users():
         return users
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving users: {str(e)}")
+
+@app.get("/recipes/get_all", response_model=list, tags=["recipes"])
+async def get_recipes():
+    """Retrieve all recipes from the database."""
+    try:
+        recipes = get_all_recipes()
+        if recipes is None:
+            return []
+        return recipes
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving recipes: {str(e)}")
 
 # History API endpoints
 @app.get("/history/get_all_info", response_model=list, tags=["history"])

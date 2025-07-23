@@ -12,9 +12,6 @@
         <n-tab name="home">首页</n-tab>
         <n-tab name="chat">聊天</n-tab>
         <n-tab name="recipe">菜谱</n-tab>
-        <n-tab name="recommend">推荐</n-tab>
-        <n-tab name="tool">工具</n-tab>
-        <n-tab name="about">关于</n-tab>
         </n-tabs>
         </n-space>
         <n-space>

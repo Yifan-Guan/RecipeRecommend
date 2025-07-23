@@ -51,6 +51,22 @@ def get_all_users():
             cursor.close()
             db.close()
             
+def get_all_recipes():
+    """Retrieve all recipes from the database."""
+    db = connect_to_user_info_database()
+    if db:
+        cursor = db.cursor()
+        try:
+            cursor.execute("SELECT * FROM `recipes`")
+            recipes = cursor.fetchall()
+            return recipes
+        except pymysql.MySQLError as e:
+            print(f"Error retrieving recipes: {e}")
+            return []
+        finally:
+            cursor.close()
+            db.close()
+            
 def get_all_history_info():
     """Retrieve all history information from the database."""
     db = connect_to_user_info_database()

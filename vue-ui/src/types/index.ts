@@ -29,3 +29,10 @@ export interface User {
   name: string
   password: string
 }
+
+export interface Recipe {
+  name: string
+  ingredients: string[]
+  steps: string[]
+  img: string
+}

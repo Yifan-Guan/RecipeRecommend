@@ -48,11 +48,13 @@
 
         <!-- 底部用户设置 -->
         <div style="padding: 12px; border-top: 1px solid #eee;">
-          <n-button text block style="justify-content: flex-start;">
+          <n-button text block 
+          style="justify-content: flex-start;"
+          @click="userLogOut">
             <n-icon size="18" style="margin-right: 8px;">
-              <Settings />
+              <LogOut />
             </n-icon>
-            设置
+            退出
           </n-button>
         </div>
   </n-layout-sider>
@@ -115,7 +117,7 @@ import {
   NIcon, NInputGroup, NFlex, NButton, NInput, NScrollbar, NLayoutSider,
 } from 'naive-ui'
 import { 
-  Add, Send, ChatbubbleEllipses, Settings, Close 
+  Add, Send, ChatbubbleEllipses, LogOut, Close 
 } from '@vicons/ionicons5'
 import { nanoid } from 'nanoid'
 import { 
@@ -330,6 +332,19 @@ async function sendUserMessage() {
     }
   }
 }
+
+
+function userLogOut() {
+  isLoggedIn.value = false
+  currentUser.value = {id: 'guest', name: "Guest"}
+  currentUserMessage.value = ''
+  messagesList.length = 0
+  chatHistory.length = 0
+  currentChatId.value = ''
+  chatOnGoing.value = false
+  createNewChat()
+  console.log("用户已退出登录")
+  }
 
 </script>
 

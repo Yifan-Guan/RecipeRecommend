@@ -17,7 +17,6 @@
 
       <n-space justify="center" class="entry-buttons">
         <n-button type="primary" @click="goTo('chat')">开始对话</n-button>
-        <n-button @click="goTo('recommend')">个性化推荐</n-button>
         <n-button @click="goTo('recipe')">浏览菜谱</n-button>
       </n-space>
     </n-card>
