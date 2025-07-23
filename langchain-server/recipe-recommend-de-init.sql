@@ -5,7 +5,6 @@ USE mysql;
 DROP USER IF EXISTS `recipe-recommend-db-manager`@`localhost`;
 CREATE USER IF NOT EXISTS `recipe-recommend-db-manager`@`localhost` IDENTIFIED BY '12345';
 GRANT ALL PRIVILEGES ON `recipe-recommend-db`.* TO `recipe-recommend-db-manager`@`localhost`;
-GRANT ALL PRIVILEGES ON `recipe-recommend-message-history-db`.* TO `recipe-recommend-db-manager`@`localhost`;
 
 USE `recipe-recommend-db`;
 DROP TABLE IF EXISTS `user-info`;
@@ -13,11 +12,6 @@ CREATE TABLE `user-info` (
 `user-id` VARCHAR(20) PRIMARY KEY,
 `user-name` TEXT,
 `user-password` TEXT
-);
-DROP TABLE IF EXISTS `login-status`;
-CREATE TABLE `login-status` (
-`login-user-id` VARCHAR(20) PRIMARY KEY,
-FOREIGN KEY(`login-user-id`) REFERENCES `user-info`(`user-id`)
 );
 DROP TABLE IF EXISTS `recipes`;
 CREATE TABLE `recipes` (
