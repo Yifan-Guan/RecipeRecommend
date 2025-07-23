@@ -51,15 +51,15 @@
 <script setup lang="ts">
 import {nanoid} from 'nanoid';
 import { onMounted } from 'vue';
+import { storeToRefs } from 'pinia';
 import {NFlex, NSpace, NCard, NH1, NH2, NH3, NLi, NOl, NUl, NText} from 'naive-ui'
 import { useRecipeStore } from '@/stores/recipe';
 
 const recipeStore = useRecipeStore();
-let recipeList = recipeStore.getRecipes;
+const { recipeList } = storeToRefs(recipeStore);
 
 onMounted(async () => {
   await recipeStore.loadRecipes();
-  recipeList = recipeStore.getRecipes;
 })
 
 </script>
