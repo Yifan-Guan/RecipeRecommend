@@ -164,4 +164,4 @@ async def update_history_name(history_id: str, history_name_update: HistoryNameU
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run(app, host="0.0.0.0", port=8000)
